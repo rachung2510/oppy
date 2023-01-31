@@ -4,9 +4,9 @@
 ICM20600 icm20600(true);
 
 #define FLEXPIN0 A0
-// #define FLEXPIN1 A1
-// #define FLEXPIN2 A2
-// #define FLEXPIN3 A3
+#define FLEXPIN1 A1
+#define FLEXPIN2 A2
+#define FLEXPIN3 A3
 
 #define SDA A4
 #define SCL A5
@@ -15,6 +15,10 @@ float indexVal;
 float middleVal;
 float ringVal;
 float pinkyVal;
+
+int accX;
+int accY;
+int accZ;
 
 void setup() {
   // put your setup code here, to run once:
@@ -26,8 +30,8 @@ void setup() {
   icm20600.initialize();
   // icm20600.reset();
 
-  Serial.print("DeviceID: ");
-  Serial.println(icm20600.getDeviceID(), HEX);
+  // Serial.print("DeviceID: ");
+  // Serial.println(icm20600.getDeviceID(), HEX);
 
 }
 
@@ -39,34 +43,48 @@ void loop() {
   ringVal = analogRead(FLEXPIN2);
   pinkyVal = analogRead(FLEXPIN3);
 
-  printVal("Index: ", indexVal, "");
-  printVal("Middle: ", middleVal, "");
-  printVal("Ring: ", ringVal, "");
-  printVal("Pinky: ", pinkyVal, "");
-  Serial.println("");
-  printImuVals(); // print IMU values
+  accX = icm20600.getAccelerationX();
+  accY = icm20600.getAccelerationY();
+  accZ = icm20600.getAccelerationZ();
 
-  Serial.println("-------------------------");
-  delay(2000);
+  // Serial.print("Index:");
+  // Serial.print(indexVal);
+  // printVal("Index", indexVal, "");
+  // printVal("Middle", middleVal, "");
+  // printVal("Ring", ringVal, "");
+  // printVal("Pinky", pinkyVal, "");
+  // Serial.println("");
+  
+  // Serial.println("A (mg): ");
+  // Serial.print("X:");
+  Serial.print(accX);
+  Serial.print(",");
+  Serial.print(accY);
+  Serial.print(",");
+  Serial.println(accZ);
+
+  // Serial.println("-------------------------");
+  // delay(2000);
 
 }
 
 void printVal(String name, float val, String unit) {
   Serial.print(name);
   Serial.print(": ");
-  Serial.print(val, 10);
+  Serial.print(val);
   Serial.print(" ");
   Serial.println(unit);
 }
 
 void printImuVals() {
   Serial.println("Acceleroscope");
+
   printVal("X", icm20600.getAccelerationX(), "mg");
   printVal("Y", icm20600.getAccelerationY(), "mg");
   printVal("Z", icm20600.getAccelerationZ(), "mg");
 
   Serial.println("Gyroscope");
-  printVal("X", icm20600.getGyroscopeX(), "dps");
-  printVal("Y", icm20600.getGyroscopeY(), "dps");
-  printVal("Z", icm20600.getGyroscopeZ(), "dps");
+  // printVal("X", icm20600.getGyroscopeX(), "dps");
+  // printVal("Y", icm20600.getGyroscopeY(), "dps");
+  // printVal("Z", icm20600.getGyroscopeZ(), "dps");
 }
