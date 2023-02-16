@@ -1,0 +1,30 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=circuit
+*Date=20:53:36
+*CreatedBy=Fritzing 0.9.10b.2022-05-14.0.9.6-336-g29c2cede
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;;11.1331;-23.702;-90;Bottom;BLE
+2;;;8.59314;-80.217;90;Bottom;A2
+3;;;24.6431;-79.6525;180;Bottom;IMU
+4;;;16.2131;-80.217;90;Bottom;A3
+5;;;33.866;-20.0039;-90;Bottom;SD
+6;10k;THT;17.4831;-72.597;90;Bottom;10k
+7;;;25.1116;-57.357;-90;Bottom;Nano
+8;9V;;42.8831;-43.387;-90;Bottom;Batt
+9;;;33.9931;-80.217;90;Bottom;A1
+10;10k;THT;9.86314;-72.597;90;Bottom;10k
+11;10k;THT;42.8831;-72.597;90;Bottom;10k
+12;;;41.6131;-80.217;90;Bottom;A0
+13;10k;THT;37.8031;-72.597;90;Bottom;10k
+14;2k;THT;27.6431;-42.117;180;Bottom;2k
+15;1k;THT;27.6431;-44.657;180;Bottom;1k
