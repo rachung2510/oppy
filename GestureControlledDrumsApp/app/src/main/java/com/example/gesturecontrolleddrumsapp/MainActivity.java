@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.ACCESS_FINE_LOCATION,
     };
+    public static final String EC2_URL = "http://54.172.65.79:5000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

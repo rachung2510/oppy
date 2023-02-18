@@ -7,6 +7,8 @@
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.33559782608695654" />
         <entry key="app/src/main/res/layout/activity_serial_input.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/bluetooth_devices_list.xml" value="0.33559782608695654" />
+        <entry key="app/src/main/res/layout/loading_dialog.xml" value="0.278125" />
+        <entry key="app/src/main/res/xml/network_security_config.xml" value="0.378125" />
       </map>
     </option>
   </component>
