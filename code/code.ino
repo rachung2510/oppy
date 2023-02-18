@@ -1,7 +1,6 @@
 #include "ICM20600.h"
 #include <Wire.h>
-#include <SD.h>
-#include <SPI.h>
+#include <SoftwareSerial.h>
 
 ICM20600 icm20600(true);
 
@@ -11,7 +10,8 @@ ICM20600 icm20600(true);
 #define FLEXPIN3 A3
 #define SDA A4
 #define SCL A5
-#define SD_ChipSelectPin 10
+#define TxD 2
+#define RxD 3
 
 // flex sensor values
 float indexVal;
@@ -23,57 +23,61 @@ float pinkyVal;
 int accX;
 int accY;
 int accZ;
+
+// IMU thresholding
 int sound_activated = 0; // boolean
 int ACC_THRESH_LOW = -1500;
 int ACC_THRESH_HIGH = -600;
 int counter = 0;
 
-// writing to SD card
-int STORE_DATA = 0; // boolean
-File dataFile;
-String filename = "acc_data.csv";
+// RX, TX for Bluetooth
+SoftwareSerial btSerial(RxD, TxD);
 
 void setup() {
   // put your setup code here, to run once:
 
-  // join I2C bus (I2Cdev library doesn't do this automatically)
-  Wire.begin();
+  Wire.begin(); // join I2C bus
+  btSerial.begin(9600);
 
-  Serial.begin(9600);
   icm20600.initialize();
-  // icm20600.reset();
-  // Serial.print("DeviceID: ");
-  // Serial.println(icm20600.getDeviceID(), HEX);
-
-  // Check if the card is present and can be initialized:
-  if (STORE_DATA == 1) {
-    if (!SD.begin(SD_ChipSelectPin)) {  
-      Serial.println("SD fail");  
-      return;
-    }
-    // Serial.println("SD ok");
-    dataFile = SD.open(filename, FILE_WRITE);  
-    dataFile.println("accX,accY,accZ");
-  }
-
+  // Serial.println("Index,Middle,Ring,Pinky,accX,accY,accZ"); // for CSV
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  // indexVal = analogRead(FLEXPIN0);
-  // middleVal = analogRead(FLEXPIN1);
-  // ringVal = analogRead(FLEXPIN2);
-  // pinkyVal = analogRead(FLEXPIN3);
-
-  // Serial.print("Index:");
-  // Serial.print(indexVal);
-  // Serial.print(",Middle:");
-  // Serial.println(middleVal);
-
+  indexVal = analogRead(FLEXPIN2);
+  middleVal = analogRead(FLEXPIN3);
+  ringVal = analogRead(FLEXPIN1);
+  pinkyVal = analogRead(FLEXPIN0);
   accX = icm20600.getAccelerationX();
   accY = icm20600.getAccelerationY();
   accZ = icm20600.getAccelerationZ();
+  
+  // ====== For PuTTY / Bluetooth ======
+  btSerial.print(indexVal);
+  btSerial.print(",");
+  btSerial.print(middleVal);
+  btSerial.print(",");
+  btSerial.print(ringVal);
+  btSerial.print(",");
+  btSerial.print(pinkyVal);
+  btSerial.print(",");
+  btSerial.print(accX);
+  btSerial.print(",");
+  btSerial.print(accY);
+  btSerial.print(",");
+  btSerial.println(accZ);
+
+  // ====== For Serial Plotting ======
+  // Serial.print("Index:");
+  // Serial.print(indexVal);
+  // Serial.print(",Middle:");
+  // Serial.print(middleVal);
+  // Serial.print(",Ring:");
+  // Serial.print(ringVal);
+  // Serial.print(",Pinky:");
+  // Serial.println(pinkyVal);
 
   // Serial.print("accX:");
   // Serial.println(accX);
@@ -82,30 +86,16 @@ void loop() {
   // Serial.print(",accZ:");
   // Serial.println(accZ);
   
-  if (STORE_DATA == 0) {
-    if ((accX < ACC_THRESH_LOW) && (sound_activated == 0)) {
-      counter++;
-      Serial.print("PLAY SOUND ");
-      Serial.println(counter);
-      sound_activated = 1;
-    }
-    if (accX > ACC_THRESH_HIGH) {
-      sound_activated = 0;
-    }
-  } else {
-    // write to CSV
-    dataFile.print(accX);
-    dataFile.print(",");
-    dataFile.print(accY);
-    dataFile.print(",");
-    dataFile.println(accZ);  
-
-    if (Serial.available()) {
-      if (Serial.read() == 'q') {
-        dataFile.close();
-      }
-    }
-  }
+  // ====== Accelerometer thresholding ======
+  // if ((accX < ACC_THRESH_LOW) && (sound_activated == 0)) {
+  //   counter++;
+  //   Serial.print("PLAY SOUND ");
+  //   Serial.println(counter);
+  //   sound_activated = 1;
+  // }
+  // if (accX > ACC_THRESH_HIGH) {
+  //   sound_activated = 0;
+  // }
 
 }
 
