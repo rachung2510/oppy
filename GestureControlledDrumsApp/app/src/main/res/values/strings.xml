@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">GestureControlledDrumsApp</string>
+    <string-array name="gestures">
+        <item>0. Neutral</item>
+        <item>1. Kick</item>
+        <item>2. Hihat</item>
+        <item>3. Snare</item>
+        <item>4. Tom</item>
+        <item>5. Crash</item>
+    </string-array>
 </resources>

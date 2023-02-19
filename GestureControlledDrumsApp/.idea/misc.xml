@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/ic_baseline_play_arrow_24.xml" value="0.2995" />
         <entry key="app/src/main/res/layout/activity_led_control2.xml" value="0.33559782608695654" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.33559782608695654" />
         <entry key="app/src/main/res/layout/activity_serial_input.xml" value="0.37916666666666665" />
