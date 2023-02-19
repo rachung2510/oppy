@@ -61,13 +61,13 @@ void loop() {
   btSerial.print(",");
   btSerial.print(ringVal);
   btSerial.print(",");
-  btSerial.print(pinkyVal);
-  btSerial.print(",");
-  btSerial.print(accX);
-  btSerial.print(",");
-  btSerial.print(accY);
-  btSerial.print(",");
-  btSerial.println(accZ);
+  btSerial.println(pinkyVal);
+  // btSerial.print(",");
+  // btSerial.print(accX);
+  // btSerial.print(",");
+  // btSerial.print(accY);
+  // btSerial.print(",");
+  // btSerial.println(accZ);
 
   // ====== For Serial Plotting ======
   // Serial.print("Index:");
