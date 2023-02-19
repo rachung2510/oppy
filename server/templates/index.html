@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html  lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+
+    <title>Gesture Controlled Drums</title>
+
+    <!-- Bootstraps Java Scipts Links -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+	<!-- JQuery links  -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <!--High CHART LIVE  -->
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="http://code.highcharts.com/highcharts-more.js"></script>
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+    <!--Gauge  -->
+    <script type="text/javascript" src="http://pubnub.github.io/eon/lib/eon.js"></script>
+
+</head>
+
+<body>
+	<style>
+		.jumbotron {
+			height: 150px;
+			margin-top: -20px;
+		}
+        .row{
+            height: 500px;
+            justify-content: center;
+        }
+	</style>
+
+	<div class="jumbotron">
+		<h1 class="text-center">Gesture Data Visualization</h1>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="container-fluid" id="data-vis"></div>
+        </div>
+    </div>
+
+    <script>
+        var chart;
+
+        function requestData() {
+            // Ajax call to get the Data from Flask
+            var requests = $.get('/get-gesture-data');
+
+            var tm = requests.done(function (result) {
+				chart.series[0].setData(result['index'])
+				chart.series[1].setData(result['middle'])
+				chart.series[2].setData(result['ring'])
+				chart.series[3].setData(result['pinky'])
+				chart.series[4].setData(result['beat'])
+				});
+        }
+
+        $(document).ready(function() {
+            chart = new Highcharts.Chart({
+                chart: {
+					renderTo: 'data-vis',
+					defaultSeriesType: 'area',
+					events: {
+						load: requestData
+							}
+					},
+                title: {
+                    text: 'Flex Sensor Data'
+                    },
+                xAxis: {
+                    tickPixelInterval: 10,
+                    maxZoom: 100
+					},
+                yAxis: {
+					min: 300,
+					max: 800,
+                    minPadding: 0.2,
+                    maxPadding: 0.2,
+                    title: {
+                        text: '',
+                        margin: 0
+						   }
+					 },
+				plotOptions: {
+					series: {
+						marker: {
+							enabled: false,
+							states: {
+								hover: {
+									enabled: true
+								}
+							}
+						}
+					}
+				},                
+				series: [{
+                    name: 'Index',
+					color : '#2980b933',
+					lineColor : '#2980b9'
+					},
+					{
+                    name: 'Middle',
+					color : '#27ae6033',
+					lineColor : '#27ae60'
+					},
+					{
+                    name: 'Ring',
+					color : '#f1c40f33',
+					lineColor : '#f1c40f'
+					},
+					{
+                    name: 'Pinky',
+					color : '#e67e2233',
+					lineColor : '#e67e22'
+					},
+					{
+                    name: 'Beat',
+					color : '#8e44ad33',
+					lineColor : '#8e44ad'
+					}]
+            });
+        });
+    </script>
+</body>
+</html>
