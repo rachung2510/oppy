@@ -37,10 +37,11 @@ void setup() {
   // put your setup code here, to run once:
 
   Wire.begin(); // join I2C bus
-  btSerial.begin(9600);
+  Serial.begin(115200);
+  // btSerial.begin(38400);
 
   icm20600.initialize();
-  // Serial.println("Index,Middle,Ring,Pinky,accX,accY,accZ"); // for CSV
+  
 }
 
 void loop() {
@@ -51,23 +52,23 @@ void loop() {
   ringVal = analogRead(FLEXPIN1);
   pinkyVal = analogRead(FLEXPIN0);
   accX = icm20600.getAccelerationX();
-  accY = icm20600.getAccelerationY();
-  accZ = icm20600.getAccelerationZ();
+  // accY = icm20600.getAccelerationY();
+  // accZ = icm20600.getAccelerationZ();
   
   // ====== For PuTTY / Bluetooth ======
-  btSerial.print(indexVal);
-  btSerial.print(",");
-  btSerial.print(middleVal);
-  btSerial.print(",");
-  btSerial.print(ringVal);
-  btSerial.print(",");
-  btSerial.println(pinkyVal);
-  // btSerial.print(",");
-  // btSerial.print(accX);
-  // btSerial.print(",");
-  // btSerial.print(accY);
-  // btSerial.print(",");
-  // btSerial.println(accZ);
+  Serial.print(indexVal);
+  Serial.print(",");
+  Serial.print(middleVal);
+  Serial.print(",");
+  Serial.print(ringVal);
+  Serial.print(",");
+  Serial.print(pinkyVal);
+  Serial.print(",");
+  Serial.print(accX);
+  Serial.println(",");
+  // Serial.print(accY);
+  // Serial.print(",");
+  // Serial.println(accZ);
 
   // ====== For Serial Plotting ======
   // Serial.print("Index:");
