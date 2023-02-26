@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         deviceList.setOnItemClickListener(myListClickListener);
     }
 
-    private AdapterView.OnItemClickListener myListClickListener = (parent, view, position, id) -> {
+    private final AdapterView.OnItemClickListener myListClickListener = (parent, view, position, id) -> {
         String info = ((TextView) view).getText().toString();
         String address = info.substring(info.length()-17);
 

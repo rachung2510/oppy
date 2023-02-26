@@ -39,10 +39,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -67,24 +65,32 @@ public class SerialInput extends AppCompatActivity {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Handler handler = new Handler(Looper.getMainLooper());
     boolean connectSuccess = true;
-    AlertDialog dialog;
+    AlertDialog progressDialog;
 
-    // Serial reading
-    Thread workerThread;
+    // Serial reading/writing
+    Thread readThread;
     byte[] readBuffer;
     int readBufferPosition;
     InputStream btInputStream;
-    volatile boolean stopWorker;
-    boolean readingInput;
-    int beatBool = 0;
-    int beatCount = 0;
+    volatile boolean stopReadThread; // boolean for beginListenForData thread
+    boolean readingInput = false; // boolean for btnStartStop
+    int beatCount = 0; // for keeping track of no. of beats
+    volatile boolean blockListen = false; // blocking call to set trial no.
 
-    // GestureData
-    String currTime = null;
-    Float indexVal, middleVal, ringVal, pinkyVal;
+    // Gesture data
+    ArrayList<Float> indexArr = new ArrayList<>();
+    ArrayList<Float> middleArr = new ArrayList<>();
+    ArrayList<Float> ringArr = new ArrayList<>();
+    ArrayList<Float> pinkyArr = new ArrayList<>();
+    ArrayList<Float> accXArr = new ArrayList<>();
+    ArrayList<Float> accYArr = new ArrayList<>();
+    ArrayList<Float> accZArr = new ArrayList<>();
+    ArrayList<Integer> beatArr = new ArrayList<>();
+    ArrayList<String> dateArr = new ArrayList<>();
+    ArrayList<Integer> beatIndArr = new ArrayList<>();
+    String currTime = "";
     String gesture1, gesture2;
     int trialNum = -1;
-    volatile boolean blockListen = false; // blocking call to set trial no.
 
     @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
@@ -111,19 +117,28 @@ public class SerialInput extends AppCompatActivity {
         btnStartStop.setOnClickListener(view -> {
             if (!readingInput) { // start
                 readingInput = true;
-                serialInput.setText("");
-                setTrialNum();
-                while (blockListen);
-                beginListenForData();
-                btnStartStop.setImageResource(R.drawable.ic_baseline_stop_24);
-                btnStartStop.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(SerialInput.this, R.color.red)));
-            } else { // stop
-                readingInput = false;
-                stopWorker = true;
-                btnStartStop.setImageResource(R.drawable.ic_baseline_play_arrow_24);
-                btnStartStop.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(SerialInput.this, R.color.green)));
                 beatCount = 0;
                 btnBeat.setText("Beat");
+                clearDataArrays();
+                blockListen = true;
+                setTrialNum();
+                while (blockListen);
+                serialInput.setText("Reading...");
+                btnStartStop.setImageResource(R.drawable.ic_baseline_stop_24);
+                btnStartStop.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(SerialInput.this, R.color.red)));
+                beginListenForData();
+
+            } else { // stop
+                readingInput = false;
+                stopReadThread = true;
+                btnStartStop.setImageResource(R.drawable.ic_baseline_play_arrow_24);
+                btnStartStop.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(SerialInput.this, R.color.green)));
+                serialInput.setText("");
+                btnBeat.setText("Beat");
+                for (Integer ind : beatIndArr) beatArr.set(ind, 1);
+                sendData();
+                try { readThread.join(); }
+                catch (Exception e) { Log.e("btnStop", e.toString()); }
             }
         });
 
@@ -132,8 +147,7 @@ public class SerialInput extends AppCompatActivity {
 
         // Click to indicate beat
         btnBeat.setOnClickListener(view -> {
-            if (beatBool == 1) return;
-            beatBool = 1;
+            beatIndArr.add(beatArr.size());
             beatCount++;
             btnBeat.setText("Beat " + beatCount);
         });
@@ -150,9 +164,7 @@ public class SerialInput extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
+            public void onNothingSelected(AdapterView<?> adapterView) {}
         });
         spinnerGesture2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -161,18 +173,8 @@ public class SerialInput extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
+            public void onNothingSelected(AdapterView<?> adapterView) {}
         });
-
-        // Set trial
-        setTrialNum();
-    }
-
-    // Helper functions
-    private void msg(String s) {
-        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 
     // Connect to / Disconnect from Bluetooth
@@ -183,8 +185,8 @@ public class SerialInput extends AppCompatActivity {
             builder.setTitle("Connecting");
             builder.setCancelable(false); // if you want user to wait for some process to finish,
             builder.setView(R.layout.loading_dialog);
-            dialog = builder.create();
-            dialog.show();
+            progressDialog = builder.create();
+            progressDialog.show();
         });
 
         // do in background
@@ -195,7 +197,6 @@ public class SerialInput extends AppCompatActivity {
                         ActivityCompat.requestPermissions(SerialInput.this, MainActivity.ANDROID_12_BLE_PERMISSIONS, 2);
                     return;
                 }
-
                 myBluetooth = BluetoothAdapter.getDefaultAdapter();
                 BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);
                 btSocket = dispositivo.createInsecureRfcommSocketToServiceRecord(myUUID);
@@ -203,7 +204,8 @@ public class SerialInput extends AppCompatActivity {
                 btSocket.connect();
                 btInputStream = btSocket.getInputStream();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
+            Log.e("connectBT", e.toString());
             connectSuccess = false;
         }
 
@@ -216,7 +218,7 @@ public class SerialInput extends AppCompatActivity {
                 msg("Connected to device");
                 isBtConnected = true;
             }
-            dialog.dismiss();
+            progressDialog.dismiss();
         });
     }
     void disconnectBT() {
@@ -233,28 +235,25 @@ public class SerialInput extends AppCompatActivity {
 
     // Listen to Bluetooth serial input, printing line by line
     void beginListenForData() {
-        final Handler handler = new Handler();
         final byte delimiter = 10; // ASCII code for a newline character
-
-        stopWorker = false;
+        stopReadThread = false;
         readBufferPosition = 0;
         readBuffer = new byte[1024];
-        workerThread = new Thread(() -> {
-            int sampleCount = 0;
-            while (!Thread.currentThread().isInterrupted() && !stopWorker) {
+        readThread = new Thread(() -> {
+            // flush all data that was read previously
+            try { btInputStream.skip(btInputStream.available()); }
+            catch (IOException e) { Log.e("workerThread", e.toString()); }
+
+            // main thread
+            while (!Thread.currentThread().isInterrupted() && !stopReadThread) {
                 try {
                     int bytesAvailable = btInputStream.available();
                     if (bytesAvailable <= 0)
                         continue; // continue if input stream cannot read any bytes
                     byte[] packetBytes = new byte[bytesAvailable];
                     int bytesRead = btInputStream.read(packetBytes);
-                    if (bytesRead < 0)
+                    if (bytesRead <= 0)
                         continue; // continue if no bytes read
-                    int[] counts = new int[256];
-                    for (byte b : packetBytes) {
-                        counts[b & 0xFF]++;
-                    }
-                    int num_delimiter_in_arr = counts[delimiter];
                     for (int i = 0; i < bytesAvailable; i++) {
                         byte b = packetBytes[i];
                         if (b == delimiter) {
@@ -263,51 +262,34 @@ public class SerialInput extends AppCompatActivity {
                             final String readInput = new String(encodedBytes, StandardCharsets.US_ASCII);
                             readBufferPosition = 0;
 
-                            if ((sampleCount == 0) && (num_delimiter_in_arr > 1)) {
-                                num_delimiter_in_arr--;
-                                continue;
-                            }
-
                             // parse read input and
-                            // ignore data if it doesn't contain 4 flex values
                             String[] data = readInput.split(",");
-                            if (data.length != 4) continue;
+                            if (data.length != 7) data = new String[]{"-1","-1","-1","-1","0","0","0"};
 
                             // get time of start of data collection
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.UK);
-                            String date = sdf.format(Calendar.getInstance().getTime());
-                            String millis = String.valueOf(Calendar.getInstance().getTimeInMillis());
-                            currTime = date + "," + millis;
-
-                            // Store data
-                            if (data[0].isEmpty()) continue; // ignore if data is empty
-                            indexVal = Float.valueOf(data[0]);
-                            middleVal = Float.valueOf(data[1]);
-                            ringVal = Float.valueOf(data[2]);
-                            pinkyVal = Float.valueOf(data[3]);
+                            currTime = String.valueOf(Calendar.getInstance().getTimeInMillis());
 
                             // Send POST request
-                            sendData();
-                            sampleCount++;
+                            beatArr.add(0);
+                            indexArr.add(Float.valueOf(data[0]));
+                            middleArr.add(Float.valueOf(data[1]));
+                            ringArr.add(Float.valueOf(data[2]));
+                            pinkyArr.add(Float.valueOf(data[3]));
+                            accXArr.add(Float.valueOf(data[4]));
+                            accYArr.add(Float.valueOf(data[5]));
+                            accZArr.add(Float.valueOf(data[6]));
+                            dateArr.add(String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
-                            // Log to terminal every ~1s
-                            if ((sampleCount - 1) % 50 != 0) continue;
-                            String currText = serialInput.getText().toString();
-                            String newText = currText + date + ": Data sent\n";
-                            handler.post(() -> {
-                                serialInput.setText(newText);
-                                scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
-                            });
                         } else {
                             readBuffer[readBufferPosition++] = b;
                         }
                     }
                 } catch (IOException ex) {
-                    stopWorker = true;
+                    stopReadThread = true;
                 }
             }
         });
-        workerThread.start();
+        readThread.start();
     }
 
     // Send POST request
@@ -326,27 +308,28 @@ public class SerialInput extends AppCompatActivity {
 
                 JSONObject jsonParam = new JSONObject();
                 jsonParam.put("trial", trialNum);
-                jsonParam.put("date", currTime);
-                jsonParam.put("index", indexVal);
-                jsonParam.put("middle", middleVal);
-                jsonParam.put("ring", ringVal);
-                jsonParam.put("pinky", pinkyVal);
-                jsonParam.put("beat", beatBool);
+                jsonParam.put("date", dateArr.toString());
+                jsonParam.put("index", indexArr.toString());
+                jsonParam.put("middle", middleArr.toString());
+                jsonParam.put("ring", ringArr.toString());
+                jsonParam.put("pinky", pinkyArr.toString());
+                jsonParam.put("accX", accXArr.toString());
+                jsonParam.put("accY", accYArr.toString());
+                jsonParam.put("accZ", accZArr.toString());
+                jsonParam.put("beat", beatArr.toString());
                 jsonParam.put("gesture", getGestureString());
-                beatBool = 0;
 
                 DataOutputStream os = new DataOutputStream(conn.getOutputStream());
                 os.writeBytes(jsonParam.toString());
                 os.flush();
                 os.close();
-
-                conn.getResponseCode(); // for some reason data doesn't send unless this is called
-//                Log.e(TAG, "JSON: " + jsonParam);
+                conn.getResponseCode(); // data doesn't send unless this is called
+                Log.e(TAG, "JSON: " + jsonParam);
 //                Log.e(TAG, "STATUS: " + conn.getResponseCode());
 //                Log.e(TAG, "MSG: " + conn.getResponseMessage());
                 conn.disconnect();
             } catch (Exception e) {
-                Log.e(TAG, e.toString());
+                Log.e("sendData", e.toString());
             }
         });
         thread.start();
@@ -358,7 +341,6 @@ public class SerialInput extends AppCompatActivity {
             try {
                 if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S)
                     return;
-                blockListen = true;
                 URL url = new URL(MainActivity.EC2_URL + "/get-next-trial");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
@@ -376,7 +358,7 @@ public class SerialInput extends AppCompatActivity {
                 in.close();
                 conn.disconnect();
             } catch (Exception e) {
-                Log.e("getData", e.toString());
+                Log.e("setTrialNum", e.toString());
             }
         });
         thread.start();
@@ -385,6 +367,25 @@ public class SerialInput extends AppCompatActivity {
     // Get gesture transition string
     public String getGestureString() {
         return gesture1 + "-" + gesture2;
+    }
+
+    // Clear data arrays for new trial
+    public void clearDataArrays() {
+        indexArr.clear();
+        middleArr.clear();
+        ringArr.clear();
+        pinkyArr.clear();
+        accXArr.clear();
+        accYArr.clear();
+        accZArr.clear();
+        beatArr.clear();
+        dateArr.clear();
+        beatIndArr.clear();
+    }
+
+    // Helper function for Toast
+    private void msg(String s) {
+        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
     }
 
 }
