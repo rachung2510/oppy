@@ -75,7 +75,7 @@ event = threading.Event()
 t = threading.Thread(target=read_serial)
 serial = serial.Serial(SERIAL_PATH, BAUD_RATE, timeout=1)
 
-gesture = input("Gesture (e.g. 0-1): ")
+gesture = input("Gesture (e.g. 01): ")
 gesture = gesture[0] + '-' + gesture[1]
 event.set()
 t.start()
