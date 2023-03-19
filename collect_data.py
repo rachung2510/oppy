@@ -3,10 +3,12 @@ import time
 import threading
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
+import sys
 
 SERIAL_PATH = "/dev/ttyUSB0"
 BAUD_RATE = 115200
-DATA_PATH = "data/"
+DATA_PATH = "../data/"
 FIGURES_PATH = "figures/"
 GESTURES = ["Kick","Hihat","Snare","Tom","Crash"]
 
@@ -47,9 +49,19 @@ def plot_data():
 	plt.ylim((400,900))
 	plt.title("Gesture data for %s-%s (Freq = %.3fHz)" % (GESTURES[g1], GESTURES[g2], freq))
 	plt.legend()
-	plt.savefig(FIGURES_PATH + gesture + ".png")
-	# plt.show()
+	if os.path.exists(FIGURES_PATH):
+		plt.savefig(FIGURES_PATH + gesture + ".png")
+	plt.show()
 
+# Check paths
+if not os.path.exists(DATA_PATH):
+	print(f"[ERROR] Data path {DATA_PATH} does not exist. Make directory if needed or change DATA_PATH.")
+	sys.exit()
+if not os.path.exists(SERIAL_PATH):
+	print(f"[ERROR] Path to USB {SERIAL_PATH} is wrong. Check again.")
+	sys.exit()
+
+# Main code
 data = {
 	"gesture": [],
 	"time": [],
@@ -63,11 +75,11 @@ event = threading.Event()
 t = threading.Thread(target=read_serial)
 serial = serial.Serial(SERIAL_PATH, BAUD_RATE, timeout=1)
 
-gesture = input("Gesture: ")
+gesture = input("Gesture (e.g. 0-1): ")
 gesture = gesture[0] + '-' + gesture[1]
 event.set()
 t.start()
-print("Reading...")
+print("Reading...(Ctrl-C once you've done 100 gestures)")
 try:
 	while True:
 		time.sleep(1)
@@ -77,7 +89,7 @@ except KeyboardInterrupt:
 	t.join()
 	plot_data()
 	data["gesture"] = [gesture for k in data["accX"]]
-	filename = input("Save data as: ")
+	filename = input("Save data as (if left empty, filename will be <gesture>.csv): ")
 	if not filename:
 		filename = gesture + ".csv"
 	df = pd.DataFrame(data)	
