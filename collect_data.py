@@ -13,14 +13,17 @@ FIGURES_PATH = "figures/"
 GESTURES = ["Kick","Hihat","Snare","Tom","Crash"]
 
 def read_serial():
-	global event, data
+	global event, data, seconds
 	while event.is_set():
 		line = serial.readline()   # read a byte
 		if not line:
 			continue
 		try:
 			string = line.decode()  # convert the byte string to a unicode string
-			print(string, end="")
+			if not seconds:
+				print(string, end="")
+			else:
+				print(f"[{seconds}] {string}", end="")
 			lst = [float(k) for k in string.split(',')[:-1]]
 			if len(lst) != 5:
 				continue
@@ -51,7 +54,7 @@ def plot_data():
 	plt.legend()
 	if os.path.exists(FIGURES_PATH):
 		plt.savefig(FIGURES_PATH + gesture + ".png")
-	plt.show()
+	# plt.show()
 
 # Check paths
 if not os.path.exists(DATA_PATH):
@@ -76,13 +79,36 @@ t = threading.Thread(target=read_serial)
 serial = serial.Serial(SERIAL_PATH, BAUD_RATE, timeout=1)
 
 gesture = input("Gesture (e.g. 01): ")
+NOBEATS = False
+if gesture[0] == gesture[1]:
+	if input("Fixed (y/n)?: ") == "y":
+		NOBEATS = True
 gesture = gesture[0] + '-' + gesture[1]
 event.set()
 t.start()
 print("Reading...(Ctrl-C once you've done 100 gestures)")
 try:
+	start = time.time()
+	seconds = 0
 	while True:
-		time.sleep(1)
+		time.sleep(.1)
+		if not NOBEATS:
+			continue
+		end = time.time()
+		if end - start > 90:
+			break
+		if end - start > seconds:
+			seconds += 1
+	event.clear()
+	t.join()
+	plot_data()
+	data["gesture"] = [gesture for k in data["accX"]]
+	filename = input("Save data as (if left empty, filename will be <gesture>.csv): ")
+	if not filename:
+		filename = gesture + "-NOBEATS.csv"
+	df = pd.DataFrame(data)	
+	df.to_csv(DATA_PATH + filename)
+	print("Saved data as " + filename)
 
 except KeyboardInterrupt:
 	event.clear()
