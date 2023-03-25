@@ -17,5 +17,5 @@ Uses machine learning to classify different gestures into different parts of the
 ## Files
 - **collect_data.py**: Python script for collecting data
 - **create_dataset.ipynb**: Jupyter notebook for creating combined dataset from individual CSVs of trials for each gesture transition
-- **predict.py**: Python script for realtime gesture prediction. Run with ```python3 predict.py --dev <usb_device_no> --hand <l/r> --sound <k/p for keyboard or playing>```.
+- **predict.py**: Python script for realtime gesture prediction. Run with ```python3 predict.py [--dev <usb_device_no>] [--hand <l/r>] [--sound <k/p for keyboard or playing>]```.
 - **model_XXX.ipynb**: Jupyter notebook for training of XXX model
