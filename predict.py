@@ -1,6 +1,5 @@
 import os
-# Ignore tensorflow warnings
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ignore tensorflow warnings
 import argparse
 import serial
 import time
@@ -8,8 +7,6 @@ import threading
 import numpy as np
 from tensorflow import keras
 from scipy.ndimage import uniform_filter1d
-import pyglet
-# import keyboard
 
 def read_serial(model, HAND):
 	global event
@@ -129,9 +126,11 @@ def read_serial(model, HAND):
 # Play the sound according to the gesture
 beat_count = 1
 def play_sound(ind):
-	global SOUNDS, beat_count
-	# keyboard.press_and_release('a')
-	SOUNDS[ind].play()
+	global PLAY_SOUND, SOUNDS, beat_count
+	if PLAY_SOUND == "play":
+		SOUNDS[ind].play()
+	else:
+		keyboard.press_and_release(SOUNDS[ind])
 	print("BEAT %d: %s     " % (beat_count, GESTURES[ind]), end="\r")
 	beat_count += 1
 	return
@@ -139,8 +138,9 @@ def play_sound(ind):
 
 # ======== Main code ========
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--dev', default=0, type=str)
-parser.add_argument('-n', '--hand', default="r", type=str)
+parser.add_argument('-d', '--dev', default=0, type=str, help="Device ID under /dev/ttyUSB")
+parser.add_argument('-n', '--hand', default="r", type=str, help="Hand: 'r' for right, 'l' for left. Default is right.")
+parser.add_argument('-s', '--sound', default="p", type=str, help="Method for playing sound: 'k' for keyboard press, or 'p' for playing sample. Default is playing.")
 args = parser.parse_args()
 
 SERIAL_PATH = "/dev/ttyUSB" + str(args.dev)
@@ -148,9 +148,15 @@ BAUD_RATE = 115200
 HAND = "left" if args.hand == "l" else "right"
 MODEL_PATH = "models/mlp_right" if HAND == "right" else "models/mlp_left"
 GESTURES = ["Kick","Hihat","Snare","Tom","Crash"]
-SOUNDS = [pyglet.resource.media("samples/" + file + ".wav", streaming=False)
+PLAY_SOUND = "play" if args.sound == "p" else "keyboard"
+if PLAY_SOUND == "play":
+	import pyglet
+	SOUNDS = [pyglet.resource.media("samples/" + file + ".wav", streaming=False)
 		for file in ["kick","hihat","snare","tom","crash"]
-			]
+		]
+else:
+	import keyboard
+	SOUNDS = ["a", "t", "s", "h", "o"]
 
 event = threading.Event()
 model = keras.models.load_model(MODEL_PATH)
