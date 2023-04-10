@@ -34,7 +34,7 @@ def read_serial(model, HAND):
 		"4-0","4-1","4-2","4-3","4-4"
 	]
 	BEAT = False # 
-	BEAT_ACTIVATiED = False # 
+	BEAT_ACTIVATED = False # 
 	BEAT_INTERVAL = 60 # number of samples between each beat (to prevent double-triggering)
 	LOW = 100
 	HIGH = 1000
@@ -117,11 +117,12 @@ def read_serial(model, HAND):
 				if max(y_pred) > 0.90:
 					transition = np.argmax(y_pred)
 					predicted_gesture = TRANSITIONS[transition]
+					# print(predicted_gesture, end='\r')
 					if not ((predicted_gesture[0] == predicted_gesture[2]) and 
 						(predicted_gesture[0] != prev_gesture[2])):
 						gesture = predicted_gesture
-		except:
-			pass
+		except Exception as e:
+			print("exception in main loop: {!s}".format(e), end='\r')
 
 # Play the sound according to the gesture
 beat_count = 1
@@ -130,7 +131,10 @@ def play_sound(ind):
 	if PLAY_SOUND == "play":
 		SOUNDS[ind].play()
 	else:
-		keyboard.press_and_release(SOUNDS[ind])
+		global keyboard
+		keyboard.press(SOUNDS[ind])
+		time.sleep(0.05)
+		keyboard.release(SOUNDS[ind])
 	print("BEAT %d: %s     " % (beat_count, GESTURES[ind]), end="\r")
 	beat_count += 1
 	return
@@ -138,12 +142,12 @@ def play_sound(ind):
 
 # ======== Main code ========
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--dev', default=0, type=str, help="Device ID under /dev/ttyUSB")
+parser.add_argument('-d', '--dev', default="ttyUSB0", type=str, help="Device ID under /dev/ (e.g. cu.usbserial-XXXXXX")
 parser.add_argument('-n', '--hand', default="r", type=str, help="Hand: 'r' for right, 'l' for left. Default is right.")
 parser.add_argument('-s', '--sound', default="p", type=str, help="Method for playing sound: 'k' for keyboard press, or 'p' for playing sample. Default is playing.")
 args = parser.parse_args()
 
-SERIAL_PATH = "/dev/ttyUSB" + str(args.dev)
+SERIAL_PATH = "/dev/" + str(args.dev)
 BAUD_RATE = 115200
 HAND = "left" if args.hand == "l" else "right"
 MODEL_PATH = "models/mlp_right" if HAND == "right" else "models/mlp_left"
@@ -155,7 +159,8 @@ if PLAY_SOUND == "play":
 		for file in ["kick","hihat","snare","tom","crash"]
 		]
 else:
-	import keyboard
+	from pynput.keyboard Controller
+	keyboard = Controller()
 	SOUNDS = ["a", "t", "s", "h", "o"]
 
 event = threading.Event()
@@ -168,5 +173,6 @@ try:
 	
 except KeyboardInterrupt:
 	event.clear()
-	pyglet.app.exit()
+	if PLAY_SOUND == "play":
+		pyglet.app.exit()
 	serial.close()
