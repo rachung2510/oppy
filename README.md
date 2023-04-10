@@ -13,13 +13,15 @@ The model classifies five gestures into five main parts of a standard acoustic d
 The user chooses which drum sound to produce through the gesture, and when to produce the sound by performing a quick downward motion with their hand.
 <p align="center">
    <img src="./images/beat.gif" alt="Beat motion" width="300px">
+   <br>
+   <sup>A quick, downward movement to produce a beat</sup>
 </p>
 
 Using the data gloves, the user can "play drums" in realtime, using manually downloaded drum sounds or MIDI sounds produced through a DAW.
 <p align="center">
    <a href="https://user-images.githubusercontent.com/76771375/230881525-39b6372d-07eb-436d-a541-51e37daa3ca2.mp4"><img src="./images/demo.gif" alt="Demo with DAW" width="240px"></a>
    <br>
-   <sup>(click for sound)</sup>
+   <sup>Demo of using one data glove to play drums using Logic Pro (click for sound)</sup>
 </p>
 
 ## Data Collection
