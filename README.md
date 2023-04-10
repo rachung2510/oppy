@@ -21,7 +21,7 @@ Using the data gloves, the user can "play drums" in realtime, using manually dow
 <p align="center">
    <a href="https://user-images.githubusercontent.com/76771375/230881525-39b6372d-07eb-436d-a541-51e37daa3ca2.mp4"><img src="./images/demo.gif" alt="Demo with DAW" width="240px"></a>
    <br>
-   <sup>Demo of using one data glove to play drums using Logic Pro (click for sound)</sup>
+   <sup>Using one data glove to play drums using Logic Pro<br>(click for sound)</sup>
 </p>
 
 ## Data Collection
