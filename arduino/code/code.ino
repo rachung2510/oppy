@@ -26,8 +26,8 @@ int accZ;
 
 // IMU thresholding
 int sound_activated = 0; // boolean
-int ACC_THRESH_LOW = -1500;
-int ACC_THRESH_HIGH = -600;
+int sound_over = 1; // boolean
+int ACC_THRESH = 600;
 int counter = 0;
 
 // RX, TX for Bluetooth
@@ -38,7 +38,6 @@ void setup() {
 
   Wire.begin(); // join I2C bus
   Serial.begin(115200);
-  // btSerial.begin(38400);
 
   icm20600.initialize();
   
@@ -52,9 +51,7 @@ void loop() {
   ringVal = analogRead(FLEXPIN1);
   pinkyVal = analogRead(FLEXPIN0);
   accX = icm20600.getAccelerationX();
-  // accY = icm20600.getAccelerationY();
-  // accZ = icm20600.getAccelerationZ();
-  
+
   // ====== For PuTTY / Bluetooth ======
   Serial.print(indexVal);
   Serial.print(",");
@@ -66,37 +63,34 @@ void loop() {
   Serial.print(",");
   Serial.print(accX);
   Serial.println(",");
-  // Serial.print(accY);
-  // Serial.print(",");
-  // Serial.println(accZ);
 
   // ====== For Serial Plotting ======
-  // Serial.print("Index:");
-  // Serial.print(indexVal);
-  // Serial.print(",Middle:");
-  // Serial.print(middleVal);
-  // Serial.print(",Ring:");
-  // Serial.print(ringVal);
-  // Serial.print(",Pinky:");
-  // Serial.println(pinkyVal);
-
-  // Serial.print("accX:");
-  // Serial.println(accX);
-  // Serial.print(",accY:");
-  // Serial.print(accY);
-  // Serial.print(",accZ:");
-  // Serial.println(accZ);
+//   Serial.print("Index:");
+//   Serial.print(indexVal);
+//   Serial.print(",Middle:");
+//   Serial.print(middleVal);
+//   Serial.print(",Ring:");
+//   Serial.print(ringVal);
+//   Serial.print(",Pinky:");
+//   Serial.print(pinkyVal);
+//
+//   Serial.print(",accX:");
+//   Serial.println(accX);
   
   // ====== Accelerometer thresholding ======
-  // if ((accX < ACC_THRESH_LOW) && (sound_activated == 0)) {
-  //   counter++;
-  //   Serial.print("PLAY SOUND ");
-  //   Serial.println(counter);
-  //   sound_activated = 1;
-  // }
-  // if (accX > ACC_THRESH_HIGH) {
-  //   sound_activated = 0;
-  // }
+//  if ((accX > ACC_THRESH) && (sound_over == 1)) {
+//    sound_over = 0;
+//    sound_activated = 1;
+//  }
+//  if ((accX < ACC_THRESH) && (sound_activated == 1)) {
+//    sound_activated = 0;
+//    counter++;
+////    Serial.print("PLAY SOUND ");
+////    Serial.println(counter);
+//  }
+//  if (accX < -2500) {
+//    sound_over = 1;
+//  }
+
 
 }
-
