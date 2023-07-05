@@ -52,6 +52,7 @@ def read_serial(model, HAND):
 			continue
 		try:
 			string = line.decode()	# convert the byte string to a unicode string
+			# print(string)
 	
 			# Parse data into 5 values for flex sensors + accX
 			lst = [float(k) for k in string.split(',')[:-1]]
@@ -109,7 +110,7 @@ def play_sound(ind):
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--dev', default="ttyUSB0", type=str, help="Device ID under /dev/ (e.g. cu.usbserial-XXXXXX")
 parser.add_argument('-n', '--hand', default="r", type=str, help="Hand: 'r' for right, 'l' for left. Default is right.")
-parser.add_argument('-s', '--sound', default="p", type=str, help="Method for playing sound: 'k' for keyboard press, or 'p' for playing sample. Default is playing.")
+parser.add_argument('-s', '--sound', default="k", type=str, help="Method for playing sound: 'k' for keyboard press, or 'p' for playing sample. Default is playing.")
 args = parser.parse_args()
 
 SERIAL_PATH = "/dev/" + str(args.dev)
