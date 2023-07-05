@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import serial
 import time
 import threading
@@ -8,7 +9,7 @@ import sys
 
 SERIAL_PATH = "/dev/ttyUSB0"
 BAUD_RATE = 115200
-DATA_PATH = "../data/"
+DATA_PATH = "./data/"
 FIGURES_PATH = "figures/"
 GESTURES = ["Kick","Hihat","Snare","Tom","Crash"]
 
