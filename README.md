@@ -38,7 +38,7 @@ Using the data gloves, the user can "play drums" in realtime, using manually dow
 
 ## Prediction
 1. In **predict.py**, set your `MODEL_PATH` and corresponding `SOUNDS` keys (if you're planning to output keypresses to a DAW). Also, set the `SERIAL_PATH` if your USB device path does not fall under `/dev/XXX`.
-2. Install dependecy packages: **pyserial**, **pyglet** if you're planning to play the provided samples (`--sound p`), and **pynput**f you're planning to use a DAW (`--sound k`).
+2. Install dependecy packages: **pyserial**, **pyglet** if you're planning to play the provided samples (`--sound p`), and **pynput** if you're planning to use a DAW (`--sound k`).
 3. Run the script with `python3 predict.py [--dev <usb_device_path>] [--hand <l/r>] [--sound <k/p>]`.
 4. The script will wait awhile to sync with the logging. Wait for the statement `Ready.` to be printed.
 5. Start doing your gestures.
