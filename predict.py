@@ -63,20 +63,35 @@ def read_serial(model, HAND):
 				print("Ready.")
 		
 			accX = lst[4]
+			if HAND == "right":
+				if accX > ACC_THRES_1 and SOUND_OVER:
+					SOUND_ACTIVATED = True
+					SOUND_OVER = False
 
-			if accX > ACC_THRES_1 and SOUND_OVER:
-				SOUND_ACTIVATED = True
-				SOUND_OVER = False
+				if accX < ACC_THRES_2 and SOUND_ACTIVATED:
+					SOUND_ACTIVATED = False
+					gesture = predict_gesture()
+					t = threading.Thread(target=play_sound, args=[gesture])
+					t.start()
 
-			if accX < ACC_THRES_2 and SOUND_ACTIVATED:
-				SOUND_ACTIVATED = False
-				gesture = predict_gesture()
-				t = threading.Thread(target=play_sound, args=[gesture])
-				t.start()
+				if accX < ACC_OVER_THRES:
+					SOUND_OVER = True
 
-			if accX < ACC_OVER_THRES:
-				SOUND_OVER = True
+			else:
+				if accX < -ACC_THRES_1 and SOUND_OVER:
+					SOUND_ACTIVATED = True
+					SOUND_OVER = False
 
+				if accX > ACC_THRES_2 and SOUND_ACTIVATED:
+					SOUND_ACTIVATED = False
+					gesture = predict_gesture()
+					t = threading.Thread(target=play_sound, args=[gesture])
+					t.start()
+
+				if accX > -ACC_OVER_THRES:
+					SOUND_OVER = True
+
+			# start collecting data only when SOUND_ACTIVATED
 			if not SOUND_ACTIVATED:
 				continue
 
